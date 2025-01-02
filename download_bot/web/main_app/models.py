@@ -2,8 +2,7 @@ from django.db import models
 
 
 # Create your models here.
-class Customer(models.Model):
-    telegram_id = models.BigIntegerField(default=0)
+class Customer(models.Model):    
     username = models.CharField(max_length=150)
     name = models.CharField(max_length=150, null=True)
     last_name = models.CharField(max_length=150, null=True)

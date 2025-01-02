@@ -41,37 +41,39 @@ class DatabaseCustomer:
 
     def add_customer(
         self,
-        telegram_id: int,
+        id: int,
         username: str,
         name: str,
         last_name: str,
         offer_link: str,
+        invited: int,
+        balance: int,
     ):
-        # SQL_EXAMPLE = "INSERT INTO Users(telegram_id,  username, name, last_name, offer_link) VALUES(1, 'John', 'Smith', 'jsmith', 'htpps://t.me/telegram_id')"
+        # SQL_EXAMPLE = "INSERT INTO Users(id,  username, name, last_name, offer_link) VALUES(1, 'John', 'Smith', 'jsmith', 'htpps://t.me/id')"
 
         sql = """
-        INSERT INTO main_app_customer(telegram_id,  username, name, last_name, offer_link) VALUES(?, ?, ?, ?, ?)
+        INSERT INTO main_app_customer(id,  username, name, last_name, offer_link,invited, balance) VALUES(?, ?, ?, ?, ?, ?, ?)
         """
         self.execute(
             sql,
-            parameters=(telegram_id, username, name, last_name, offer_link),
+            parameters=(id, username, name, last_name, offer_link, invited, balance),
             commit=True,
         )
 
-    def select_user(self, **kwargs):
-        # SQL_EXAMPLE = "SELECT * FROM Users where id=1 AND Name='John'"
-        sql = "SELECT * FROM main_customer WHERE "
+    def select_customer(self, **kwargs):
+        # SQL_EXAMPLE = "SELECT * FROM Customer where id=1 AND Name='John'"
+        sql = "SELECT * FROM main_app_customer WHERE "
         sql, parameters = self.format_args(sql, kwargs)
 
         return self.execute(sql, parameters=parameters, fetchone=True)
 
-    def update_user(self, invited, balance):
-        # SQL_EXAMPLE = "UPDATE Users SET invited=5 WHERE balance=50"
+    def update_customer(self, id: int, invited: int, balance: int):
+        # SQL_EXAMPLE = "UPDATE customer SET invited=5 AND balance=50 WHERE id=5"
 
         sql = f"""
-        UPDATE Users SET invited=? WHERE balance=?
+        UPDATE main_app_customer SET invited = invited + ?, balance = balance + ? WHERE id = ?
         """
-        return self.execute(sql, parameters=(invited, balance), commit=True)
+        return self.execute(sql, parameters=(invited, balance, id), commit=True)
 
 
 def logger(statement):

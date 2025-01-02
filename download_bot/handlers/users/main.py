@@ -1,7 +1,6 @@
 import os
 from aiogram import types
-from aiogram.utils import executor
-from loader import dp
+from loader import dp, bot
 import yt_dlp
 from moviepy.editor import VideoFileClip, AudioFileClip
 
@@ -50,18 +49,23 @@ async def download_from_others(url):
 @dp.message_handler(regexp=r"https?://[^\s]+")
 async def download_video(message: types.Message):
     video_url = message.text
+    bot_username = (await bot.get_me()).username
     await message.reply("Videoni yuklab olishni boshlayapman. Bir oz kuting...")
 
     # Videoni yuklab olish
-    if "youtu" in video_url:
-        video_path = await download_from_youtube(video_url)
-    else:
-        video_path = await download_from_others(video_url)
+    video_path = (
+        await download_from_youtube(video_url)
+        if "youtu" in video_url
+        else await download_from_others(video_url)
+    )
 
     if video_path:
         # Foydalanuvchiga videoni yuborish
         with open(video_path, "rb") as video:
-            await message.reply_video(video, caption="Mana sizning videongiz!")
+            await message.reply_video(
+                video,
+                caption=f"\nBot manzili - <a href='https://t.me/{bot_username}?start={message.from_user.id}'>{bot_username}</a>\n",
+            )
             os.remove(video_path)
     else:
         await message.reply(
