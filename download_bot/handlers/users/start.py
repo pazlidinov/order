@@ -1,20 +1,25 @@
 import logging
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
-from loader import dp, db_customer, bot
+from loader import dp, db_customer, bot, db_inviteamount
 from keyboards.default.balance_key import balance_btn
 
 
 def update_balance(message):
     args = message.get_args()
     inviter_id = int(args) if args.isdigit() else None
+    balance = (
+        db_inviteamount.select_inviteamount()[1]
+        if db_inviteamount.select_inviteamount()[1]
+        else 0
+    )
 
     if inviter_id:
         try:
             db_customer.update_customer(
                 id=inviter_id,
                 invited=1,
-                balance=50,
+                balance=balance,
             )
         except Exception as err:
             logging.exception(err)
@@ -50,6 +55,6 @@ async def bot_start(message: types.Message):
         bot_username = (await bot.get_me()).username
         add_user(message, bot_username)
     await message.answer(
-        f"Salom, {message.from_user.full_name}!\nBu bot orqali ijtimoiytarmoqlardan videolarni yuklab olishingiz mumkin.",
+        f"Video linkini yuboring...",
         reply_markup=balance_btn,
     )

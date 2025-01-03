@@ -2,7 +2,7 @@ from django.db import models
 
 
 # Create your models here.
-class Customer(models.Model):    
+class Customer(models.Model):
     username = models.CharField(max_length=150)
     name = models.CharField(max_length=150, null=True)
     last_name = models.CharField(max_length=150, null=True)
@@ -12,3 +12,7 @@ class Customer(models.Model):
 
     def __str__(self):
         return str(self.username)
+
+
+class InviteAmount(models.Model):
+    amount = models.IntegerField(default=0)
