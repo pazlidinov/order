@@ -1,16 +1,31 @@
 import os
+import requests
 from aiogram import types
 from loader import dp, bot
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+import logging
 import yt_dlp
 from moviepy.editor import VideoFileClip, AudioFileClip
-import logging
-from keyboards.inline.forward import forward_to_others
 
 
-async def download_from_youtube(url):
+VIDEO_URL = ""
+
+
+async def get_share_keyboard():
+    keyboard = InlineKeyboardMarkup(row_width=1)
+    bot_username = (await bot.get_me()).username
+    # Botni ulashish tugmasi yaratish
+    share_button = InlineKeyboardButton(
+        text="Botni ulashish", url=f"https://t.me/{bot_username}"  # Botning URL manzili
+    )
+    keyboard.add(share_button)
+    return keyboard
+
+
+async def download_from_youtube(url, format_id):
     # Video yuklash
     ydl_opts_video = {
-        "format": "160",
+        "format": format_id,
         "outtmpl": "downloads/video.mp4",
     }
     with yt_dlp.YoutubeDL(ydl_opts_video) as ydl:
@@ -41,12 +56,56 @@ async def download_from_youtube(url):
     return "downloads/output.mp4"
 
 
-async def download_from_others(url):
+async def get_youtube_formats(url, message):
+    try:
+        # yt-dlp yordamida formatlarni olish
+        ydl_opts = {"quiet": True}  # Konsol chiqishini o'chirish
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            formats = info.get("formats", [])
+
+            list_formats = {}
+            for fmt in formats:
+                if "p)" in fmt.get("format"):
+                    one_format = fmt.get("format").split(" ")
+                    list_formats[one_format[-1]] = one_format[0]
+        return list_formats
+    except Exception as e:
+        await message.reply(f"Xato yuz berdi")
+
+
+async def download_from_instagram(url):
     yt_opts = {"outtmpl": "downloads/%(title)s.%(ext)s"}
     with yt_dlp.YoutubeDL(yt_opts) as ydl:
         info_dict = ydl.extract_info(url, download=True)
         return ydl.prepare_filename(info_dict)
 
+
+async def download_tiktok_video(url):
+    """TikTok video URLdan video faylini yuklab olish"""
+    ydl_opts = {        
+        "outtmpl": "downloads/%(id)s.%(ext)s",  # Video faylini saqlash joyi
+    }
+
+    # TikTok videosini yuklash
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(url, download=True)
+        video_file_path = ydl.prepare_filename(info_dict)
+        return video_file_path  # Yuklangan video fayl manzili
+# TikTok yuklash funksiyasi
+# async def download_tiktok_video(url):
+#     try:
+#         # TikFast API-ni ishlatish
+#         api_url = "https://tikfast.net/api/without_watermark?url=" + url
+#         response = requests.get(api_url).json()
+
+#         if response.get("status") == "success":
+#             return response["video"]
+#         else:
+#             return None
+#     except Exception as e:
+#         print("Xato:", e)
+#         return None
 
 async def send_video(message, video_path):
     bot_username = (await bot.get_me()).username
@@ -57,7 +116,7 @@ async def send_video(message, video_path):
             await message.reply_video(
                 video,
                 caption=f"\nBot manzili - <a href='https://t.me/{bot_username}?start={message.from_user.id}'>{bot_username}</a>\n",
-                reply_markup=forward_to_others,
+                reply_markup=await get_share_keyboard(),
             )
             os.remove(video_path)
     else:
@@ -68,29 +127,52 @@ async def send_video(message, video_path):
 
 @dp.message_handler(regexp=r"https?://[^\s]+")
 async def accept_link(message: types.Message):
-    video_url = message.text
-    if "youtu" in video_url:
-        try:
-            # yt-dlp yordamida formatlarni olish
-            ydl_opts = {"quiet": True}  # Konsol chiqishini o'chirish
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(video_url, download=False)
-                formats = info.get("formats", [])
+    global VIDEO_URL
+    VIDEO_URL = message.text
+    if "youtu" in VIDEO_URL:
+        list_formats = await get_youtube_formats(VIDEO_URL, message)
+        inline_keyboard = InlineKeyboardMarkup(row_width=2)
+        for key, item in list_formats.items():
+            format_btn = InlineKeyboardButton(key, callback_data=f"format_{item}")
+            inline_keyboard.add(format_btn)
+        await message.answer(
+            "YouTube video formatini tanlang:", reply_markup=inline_keyboard
+        )
 
-                list_formats = {}
-                for fmt in formats:
-                    if "p)" in fmt.get("format"):
-                        one_format = fmt.get("format").split(" ")
-                        list_formats[one_format[-1]] = one_format[0]
-                logging.info(list_formats)
-                # if not formats:
-                #     response = "Formatlar topilmadi."
-        except Exception as e:
-            await message.reply(f"Xato yuz berdi")
-        # await message.reply("Videoni yuklab olishni boshlayapman. Bir oz kuting...")
-        # video_path = await download_from_youtube(video_url)
-        # await send_video(message, video_path)
-    else:
+    if "instagram.com" in VIDEO_URL:
         await message.reply("Videoni yuklab olishni boshlayapman. Bir oz kuting...")
-        video_path = await download_from_others(video_url)
+        video_path = await download_from_instagram(VIDEO_URL)
         await send_video(message, video_path)
+
+    if "tiktok.com" in VIDEO_URL:
+        await message.reply("Videoni yuklab olishni boshlayapman. Bir oz kuting...")
+        video_path = await download_tiktok_video(VIDEO_URL)
+        await send_video(message, video_path)
+
+
+# Callback queryni qayta ishlash
+@dp.callback_query_handler(lambda c: c.data.startswith("format_"))
+async def process_format_selection(callback_query: types.CallbackQuery):
+    global VIDEO_URL
+    format_id = callback_query.data.split("_")[1]
+
+    await bot.answer_callback_query(
+        callback_query.id, "Videoni yuklab olishni boshlayapman. Bir oz kuting..."
+    )
+    video_path = await download_from_youtube(VIDEO_URL, format_id)
+    bot_username = (await bot.get_me()).username
+
+    if video_path:
+        # Foydalanuvchiga videoni yuborish
+        with open(video_path, "rb") as video:
+            await bot.send_video(
+                callback_query.from_user.id,
+                video=video,
+                caption=f"\nBot manzili - <a href='https://t.me/{bot_username}?start={callback_query.from_user.id}'>{bot_username}</a>\n",
+                reply_markup=await get_share_keyboard(),
+            )
+            os.remove(video_path)
+    else:
+        await bot.answer_callback_query(
+            "Videoni yuklab bo'lmadi. Iltimos, linkni tekshiring yoki boshqa video yuboring."
+        )
