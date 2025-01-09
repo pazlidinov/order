@@ -81,31 +81,35 @@ async def download_from_instagram(url):
         return ydl.prepare_filename(info_dict)
 
 
-async def download_tiktok_video(url):
-    """TikTok video URLdan video faylini yuklab olish"""
-    ydl_opts = {        
-        "outtmpl": "downloads/%(id)s.%(ext)s",  # Video faylini saqlash joyi
-    }
-
-    # TikTok videosini yuklash
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        info_dict = ydl.extract_info(url, download=True)
-        video_file_path = ydl.prepare_filename(info_dict)
-        return video_file_path  # Yuklangan video fayl manzili
-# TikTok yuklash funksiyasi
 # async def download_tiktok_video(url):
-#     try:
-#         # TikFast API-ni ishlatish
-#         api_url = "https://tikfast.net/api/without_watermark?url=" + url
-#         response = requests.get(api_url).json()
+#     """TikTok video URLdan video faylini yuklab olish"""
+#     ydl_opts = {
+#         "outtmpl": "downloads/%(id)s.%(ext)s",  # Video faylini saqlash joyi
+#     }
 
-#         if response.get("status") == "success":
-#             return response["video"]
-#         else:
-#             return None
-#     except Exception as e:
-#         print("Xato:", e)
-#         return None
+#     # TikTok videosini yuklash
+#     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+#         info_dict = ydl.extract_info(url, download=True)
+#         video_file_path = ydl.prepare_filename(info_dict)
+#         return video_file_path  # Yuklangan video fayl manzili
+
+
+# TikTok videoni yuklab olish uchun funksiya
+async def download_tiktok_video(url):
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, headers=headers)
+        logging.info(response)
+        # Misol uchun, response URL video manziliga olib keladi
+        # Bu kodning faqat misol sifatida ishlatilayotganini unutmang
+        if response.status_code == 200:
+            return response.content  # video faylini olish
+        else:
+            return None
+    except Exception as e:
+        return None
 
 async def send_video(message, video_path):
     bot_username = (await bot.get_me()).username
