@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Yuklab olish</title>
+</head>
+
+<body>
+    <h1>Video yuklanmoqda...</h1>
+    <p id="videoUrl">{{ url }}</p>
+
+    <script>
+        // Sahifa yuklanganda video yuklash jarayonini boshlash
+        window.onload = function () {
+            const videoUrl = document.getElementById('videoUrl');  // Bu yerga kerakli video URL'ini joylashtiring
+            
+
+            fetch(videoUrl)
+                .then(response => response.blob())  // Video faylini blob sifatida olish
+                .then(blob => {
+                    // Blob ni yaratib, uni fayl sifatida yuklash uchun link yaratish
+                    const videoBlobUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = videoBlobUrl;
+                    a.download = 'downloaded_video.mp4';  // Fayl nomini belgilash
+                    a.click();  // Yuklab olishni boshlash
+                    URL.revokeObjectURL(videoBlobUrl);  // Yaratilgan URL'ni o'chirish
+                })
+                .catch(error => {
+                    console.error('Video yuklashda xatolik:', error);
+                });
+        };
+    </script>
+</body>
+
+</html>

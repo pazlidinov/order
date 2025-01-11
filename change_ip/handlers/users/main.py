@@ -161,26 +161,24 @@ async def process_format_selection(callback_query: types.CallbackQuery):
     global VIDEO_URL
     format_id = callback_query.data.split("_")[1]
 
-    await bot.answer_callback_query(
-        callback_query.id, "Videoni yuklab olishni boshlayapman. Bir oz kuting..."
-    )
-
-    video_path = await download_from_youtube(VIDEO_URL, format_id)
-    bot_username = (await bot.get_me()).username
-
-    if video_path:
-        # Foydalanuvchiga videoni yuborish
-        with open(video_path, "rb") as video:
-            await bot.send_video(
-                callback_query.from_user.id,
-                video=video,
-                caption=f"\nBot manzili - <a href='https://t.me/{bot_username}?start={callback_query.from_user.id}'>{bot_username}</a>\n",
-                reply_markup=await get_share_keyboard(),
+    ydl_opts = {
+        "format": format_id,  # Video yoki audio sifatini tanlash
+        "quiet": True,
+        "proxy": None,
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(VIDEO_URL, download=False)
+        download_url = info["url"][8:]
+        logging.info(download_url)
+        keyboard = InlineKeyboardMarkup().add(
+            InlineKeyboardButton(
+                "Yuklab olish", url=f"http://192.168.105.68:8000/?url={download_url}"
             )
-            os.remove(video_path)
-    else:
-        await bot.answer_callback_query(
-            "Videoni yuklab bo'lmadi. Iltimos, linkni tekshiring yoki boshqa video yuboring."
         )
 
-    
+        await bot.edit_message_text(
+            "Yuklab olish uchun quyidagi tugmani bosing",
+            chat_id=callback_query.message.chat.id,
+            message_id=callback_query.message.message_id,
+            reply_markup=keyboard,
+        )
