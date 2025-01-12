@@ -168,17 +168,7 @@ async def process_format_selection(callback_query: types.CallbackQuery):
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(VIDEO_URL, download=False)
-        download_url = info["url"][8:]
-        logging.info(download_url)
-        keyboard = InlineKeyboardMarkup().add(
-            InlineKeyboardButton(
-                "Yuklab olish", url=f"http://192.168.105.68:8000/?url={download_url}"
-            )
-        )
-
-        await bot.edit_message_text(
-            "Yuklab olish uchun quyidagi tugmani bosing",
-            chat_id=callback_query.message.chat.id,
-            message_id=callback_query.message.message_id,
-            reply_markup=keyboard,
-        )
+        download_url = info["url"][8:]       
+        
+        await bot.send_message(callback_query.from_user.id, text=f"<a href='http://192.168.13.10:8000/?url={download_url}'>Yuklab olish uchun bosing</a>")
+       

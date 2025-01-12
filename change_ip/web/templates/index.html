@@ -9,28 +9,53 @@
 
 <body>
     <h1>Video yuklanmoqda...</h1>
+    <a href="{{url}}" download="myvideo.mp4">yuklash tugmasi</a>
     <p id="videoUrl">{{ url }}</p>
+    <video controls autoplay name="media">
+        <source src="{{ url }}" type="video/webm">
 
+    </video>
     <script>
         // Sahifa yuklanganda video yuklash jarayonini boshlash
-        window.onload = function () {
-            const videoUrl = document.getElementById('videoUrl');  // Bu yerga kerakli video URL'ini joylashtiring
-            
+        window.onload = async function () {
+            // const videoUrl = document.getElementById('videoUrl').textContent;  // Bu yerga kerakli video URL'ini joylashtiring           
+            const videoUrl = 'https://rr5---sn-01oxu-u5nl.googlevideo.com/videoplayback?expire=1736679569&ei=MUyDZ-SiMZKhv_IP3eHPuAw&ip=213.230.100.118&id=o-AAv1Oosddt8Sn28iC8jSJUzBTqNhG7QNheQpbPHOg0yK&itag=278&source=youtube&requiressl=yes&xpc=EgVo2aDSNQ==&met=1736657969,&mh=bW&mm=31,29&mn=sn-01oxu-u5nl,sn-4g5edndk&ms=au,rdu&mv=m&mvi=5&pl=23&rms=au,au&initcwndbps=1241250&bui=AY2Et-Np21L3gTlaI7p3QGCqGY_-u3NIbmkvkd1KXUI-ZhrXbFI4Lpsc3XJDPBY5IoHtgYGXheqJi7Hd&spc=9kzgDZXUbm_Mm_jeBNkeXoS-QM9trYjNI3R828kOC_TuZZSQI1Qh&vprv=1&svpuc=1&mime=video/webm&rqh=1&gir=yes&clen=124490&dur=10.566&lmt=1728200216802399&mt=1736657576&fvip=4&keepalive=yes&fexp=51326932,51335594,51353498,51371294&c=IOS&txp=630A224&sparams=expire,ei,ip,id,itag,source,requiressl,xpc,bui,spc,vprv,svpuc,mime,rqh,gir,clen,dur,lmt&sig=AJfQdSswRQIhAPwaJCejeXcE7M_buBg8HsnMrs6sYOjQ-1t8AcUBliPTAiAX3xZTBdz6stRttoHyI_Y-prZ4b2mOHJ6ZLQfALRG0YQ==&lsparams=met,mh,mm,mn,ms,mv,mvi,pl,rms,initcwndbps&lsig=AGluJ3MwRQIgTgNKVIlfhSk1ucoI_rn5i8F4VPC_uLaxJLmSC_cqJPECIQDTj0f80BbA0v3HlBpCq7JmWF7W7m6vHXo-pNiqrJy-wA=='           
+            // Fetch yordamida faylni olish
+            fetch(videoUrl, {
+                method: 'GET',
+                mode: 'no-cors',
+                
+            }).then(response=>{
+                console.log(response)
+            })
+                // .then(response => response.blob())  // Response-ni Blob formatida olish
+                // .then(blob => {
+                //     // Blob'dan vaqtinchalik URL yaratish
+                //     const url = window.URL.createObjectURL(blob);
 
-            fetch(videoUrl)
-                .then(response => response.blob())  // Video faylini blob sifatida olish
-                .then(blob => {
-                    // Blob ni yaratib, uni fayl sifatida yuklash uchun link yaratish
-                    const videoBlobUrl = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = videoBlobUrl;
-                    a.download = 'downloaded_video.mp4';  // Fayl nomini belgilash
-                    a.click();  // Yuklab olishni boshlash
-                    URL.revokeObjectURL(videoBlobUrl);  // Yaratilgan URL'ni o'chirish
-                })
+                //     // Faylni saqlash uchun <a> tegini yaratish
+                //     const a = document.createElement('a');
+                //     a.href = url;
+                //     a.download = 'video.mp4';  // Faylni nomlash
+                //     document.body.appendChild(a);  // Linkni DOM'ga qo'shish
+                //     a.click();  // Yuklab olishni boshlash
+                //     a.remove();  // Linkni DOM'dan olib tashlash
+                //     window.URL.revokeObjectURL(url);  // Xotirani bo'shatish
+                // })
                 .catch(error => {
-                    console.error('Video yuklashda xatolik:', error);
+                    console.error('Faylni yuklab olishda xato:', error);
                 });
+            // const blob = await response.blob();  // Videoni blob formatida olish
+
+            // // FormData yordamida video faylini serverga yuborish
+            // const formData = new FormData();
+            // formData.append("file", blob, "video.mp4");
+            // // Serverga yuborish
+            // const uploadResponse = await fetch('http://192.168.13.10:8000/upload', {
+            //     method: 'POST',
+            //     body: formData,
+            // });
+
         };
     </script>
 </body>
