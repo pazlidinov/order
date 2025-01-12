@@ -9,6 +9,8 @@ environs = "~=8.0.0"
 yt-dlp = "*"
 moviepy = "*"
 django = "==4.0.3"
+pyopenssl = "*"
+django-sslserver = "*"
 
 [dev-packages]
 
